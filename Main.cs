@@ -1,16 +1,17 @@
 ﻿using BoneLib.BoneMenu;
 using BoneLib.Notifications;
-using Il2CppSLZ.Marrow.SceneStreaming;
-using Il2CppSLZ.Marrow.Warehouse;
 using Il2CppSLZ.Marrow;
 using Il2CppSLZ.Marrow.Pool;
+using Il2CppSLZ.Marrow.SceneStreaming;
+using Il2CppSLZ.Marrow.Warehouse;
 using LabFusion.Data;
 using LabFusion.Network;
 using LabFusion.Player;
 using LabFusion.Utilities;
 using MelonLoader;
-using UnityEngine;
 using System;
+using UnityEngine;
+using static System.Net.WebRequestMethods;
 
 namespace FsOptimizer
 {
@@ -20,8 +21,8 @@ namespace FsOptimizer
         public const string Description = "A Fusion server cleaner/optimizer";
         public const string Author = "Popper";
         public const string Company = null;
-        public const string Version = "1.6.0";
-        public const string DownloadLink = null;
+        public const string Version = "1.6.4";
+        public const string DownloadLink = "https://github.com/PopperVids/FsOptimizer";
     }
 
     public class FsOptimizer : MelonMod
@@ -71,12 +72,12 @@ namespace FsOptimizer
         private void SetupMenu()
         {
             // Enhanced UI with emojis and better colors
-            MainPage = Page.Root.CreatePage("<color=#00CCFF>F</color><color=#00C3FE>s</color><color=#00BBFD>O</color><color=#00B2FD>p</color><color=#00AAFC>t</color><color=#00A1FC>i</color><color=#0099FB>m</color><color=#0090FB>i</color><color=#0088FA>z</color><color=#007FFA>e</color><color=#0077F9>r</color> <color=#FFD700>v1.5</color>", Color.white, 0, true);
+            MainPage = Page.Root.CreatePage("<color=#00CCFF>F</color><color=#00C3FE>s</color><color=#00BBFD>O</color><color=#00B2FD>p</color><color=#00AAFC>t</color><color=#00A1FC>i</color><color=#0099FB>m</color><color=#0090FB>i</color><color=#0088FA>z</color><color=#007FFA>e</color><color=#0077F9>r</color>", Color.white, 0, true);
 
             // Main cleaning functions with better visual design
             MainPage.CreateFunction("Clean Server", Color.green, () => CleanServer());
             MainPage.CreateFunction("Reload Level", Color.red, () => ReloadLevel());
-            MainPage.CreateFunction("Memory Clean (warning may crash game)", Color.cyan, () => CleanMemory());
+            MainPage.CreateFunction("Memory Clean (Experimental)", Color.cyan, () => CleanMemory());
 
             // Auto-clean settings
             MainPage.CreateBool("Auto Clean", Color.cyan, autoCleanEnabled.Value, (value) => {
@@ -291,7 +292,7 @@ namespace FsOptimizer
             {
                 var notification = new Notification
                 {
-                    Title = "FsOptimizer v1.5",
+                    Title = "FsOptimizer",
                     Message = message,
                     Type = type,
                     PopupLength = 3f,

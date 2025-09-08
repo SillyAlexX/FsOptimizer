@@ -51,7 +51,7 @@ If an SDK mod (a mod installed from mod.io) has stopped it's functionality after
 
 FsO has only been tested on PCVR, so if you're using this on Quest (or any other platform for that matter), YMMV. If you do face any issues though, make sure you let me know!
 
-If you have any other issues, feedback or criticisms, feel free to contact me on my Discord server: <https://discord.gg/aQhhXRDqn9>
+If you have any other issues, feedback or criticisms, feel free to contact me on my Discord server: <https://discord.gg/aQhhXRDqn9> or report it to the Github page <https://github.com/PopperVids/FsOptimizer>
 
 ## Credits
 
