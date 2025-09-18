@@ -24,7 +24,7 @@ namespace FsOptimizer
     // Config management system
     public static class ConfigManager
     {
-        private static string ConfigFilePath => Path.Combine(Paths.ConfigPath, "settings.json");
+        private static string ConfigFilePath => Path.Combine(Paths.ConfigPath, "Config.json");
 
         // Config data structure
         [Serializable]
@@ -113,7 +113,7 @@ namespace FsOptimizer
         {
             try
             {
-                MelonLogger.Msg($"Creating FsOptimizer folders in: {MelonEnvironment.GameRootDirectory}");
+                MelonLogger.Msg($"Creating FsOptimizer folders in: {MelonEnvironment.UserDataDirectory}");
 
                 // Create main FsOptimizer folder first
                 if (!Directory.Exists(ConfigFolder))
@@ -140,10 +140,10 @@ namespace FsOptimizer
     {
         public const string Name = "FsOptimizer";
         public const string Description = "A Fusion server cleaner/optimizer";
-        public const string Author = "Popper";
+        public const string Author = "SillyAlex";
         public const string Company = null;
         public const string Version = "1.6.5";
-        public const string DownloadLink = "https://github.com/PopperVids/FsOptimizer";
+        public const string DownloadLink = "https://github.com/SillyAlexX/FsOptimizer";
     }
 
     public class FsOptimizer : MelonMod

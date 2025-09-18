@@ -11,7 +11,7 @@ using System.Reflection;
 [assembly: AssemblyVersion(FsOptimizer.BuildInfo.Version)]
 [assembly: AssemblyFileVersion(FsOptimizer.BuildInfo.Version)]
 [assembly: MelonInfo(typeof(FsOptimizer.FsOptimizer), FsOptimizer.BuildInfo.Name, FsOptimizer.BuildInfo.Version, FsOptimizer.BuildInfo.Author, FsOptimizer.BuildInfo.DownloadLink)]
-[assembly: MelonColor(0, 255, 255, 0)]
+[assembly: MelonColor(255, 37, 150, 190)]
 
 // Create and Setup a MelonGame Attribute to mark a Melon as Universal or Compatible with specific Games.
 // If no MelonGame Attribute is found or any of the Values for any MelonGame Attribute on the Melon is null or empty it will be assumed the Melon is Universal.
