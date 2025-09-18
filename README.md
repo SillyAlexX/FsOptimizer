@@ -4,7 +4,7 @@ FusionOptimizer (FsO) is a mod that aims to make a Fusion server hoster's day *s
 
 ## Features
 
-All of the features listed below can be found in the FsOptimizer option in the BoneMenu. To access the BoneMenu, hold the Quick Menu button on your controller (B/Y buttons on a Quest controller), release it while hovering over the "Preferences" button, then click the "BoneMenu" Button.
+All the features listed below can be found in the FsOptimizer option in the Bone Menu. To access the BoneMenu, hold the Quick Menu button on your controller (B/Y buttons on a Quest controller), release it while hovering over the "Preferences" button, then click the "BoneMenu" Button.
 
 ### Server Cleaner
 
@@ -12,17 +12,23 @@ Similar to Fusion's built-in Admin Cleanup tool, the Server Cleaner will despawn
 
 ### Level Reloader
 
-The Level Reloader does exactly what it says it does: it reloads the current level you are in. This is meant to be used when FsO's Server Cleaner doesn't clean everything. (Although, it can be used for other things too, if you'd like.)
+The Level Reloader does exactly what it says it does: it reloads the current level you are in. This is intended for use when FsO's Server Cleaner fails to clean everything.
 
 ### Auto Cleaner
 
-The Auto Cleaner will run the Server Cleaner after a certain amount of time has passed. This can be configured to be clean every 5 to 30 minutes.
+The Auto Cleaner will run the Server Cleaner after a certain amount of time has passed. This can be configured to be cleaned every 5 to 30 minutes.
 
-### Memory Cleaner (experimental, prone to crashing)
+### Adaptive Auto Clean
 
-The Memory Cleaner tries to despawn anything that isn't being rendered, meaning it will look for any lines of code that belong to a spawnable that isn't currently being used (e.g. a spawnable that hasn't been despawned properly) and attempt to remove it.
+Adaptive Auto Clean will automatically set the Auto Clean time based on the number of players active on the server, 30 minutes for 1-2 players, 25 minutes for 3-4 players, 15 minutes for exactly 5 players, 10 minutes for 8+ players AAC requires Auto Cleaner to be enabled if you attempt to enable it you will be prompted to enable auto clean (Turn them both off then on).
 
-The Memory Cleaner is a very advanced cleaner, though, and should only be used **very rarely**, or if the server has been on for an extended period of time and **the Server Cleaner isn't helping with the lag anymore** as it has a high chance of crashing.
+### Show Current Status
+
+Show Current Status will do exactly what it says it will: display the time set for AAC and the number of players online, and if AAC and AC are enabled.
+
+### Save Config
+
+Again does exactly what it says it does: save the config, so you don't need to set your settings every time you reload the level or relaunch the game
 
 ## Installation
 
@@ -47,11 +53,11 @@ These instructions are for Steam installations, but Meta PC App installations sh
 
 ## Troubleshooting
 
-If an SDK mod (a mod installed from mod.io) has stopped it's functionality after the Memory Cleaner was used, try spawning it again. If that doesn't work, or if a code mod (a mod installed from Thunderstore) stops working, make sure you report it in my Discord server, then try using the Level Reloader or restart the game to try and fix it.
+If a code mod (a mod installed from Thunderstore) stops working, make sure you report it in my Discord server, then try using the Level Reloader or restart the game to try and fix it.
 
-FsO has only been tested on PCVR, so if you're using this on Quest (or any other platform for that matter), YMMV. If you do face any issues though, make sure you let me know!
+FsO has only been tested on PCVR, so if you're using this on Quest (or any other platform for that matter), YMMV. If you do face any issues, though, make sure you let me know!
 
-If you have any other issues, feedback or criticisms, feel free to contact me on my Discord server: <https://discord.gg/aQhhXRDqn9> or report it to the Github page <https://github.com/PopperVids/FsOptimizer>
+If you have any other issues, feedback, or criticisms, feel free to contact me on my Discord server: <https://discord.gg/aQhhXRDqn9> or report it to the Github page <https://github.com/PopperVids/FsOptimizer>
 
 ## Credits
 
