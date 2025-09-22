@@ -1,6 +1,7 @@
 ﻿using BoneLib;
 using BoneLib.BoneMenu;
 using BoneLib.Notifications;
+using HarmonyLib;
 using Il2CppSLZ.Marrow;
 using Il2CppSLZ.Marrow.Pool;
 using Il2CppSLZ.Marrow.SceneStreaming;
@@ -9,10 +10,12 @@ using LabFusion.Data;
 using LabFusion.Downloading.ModIO;
 using LabFusion.Network;
 using LabFusion.Player;
+using LabFusion.Senders;
 using LabFusion.Utilities;
 using MelonLoader;
 using MelonLoader.Utils;
 using Newtonsoft.Json;
+using Steamworks;
 using System;
 using System.Collections;
 using System.IO;
@@ -142,7 +145,7 @@ namespace FsOptimizer
         public const string Description = "A Fusion server cleaner/optimizer";
         public const string Author = "SillyAlex";
         public const string Company = null;
-        public const string Version = "1.6.5";
+        public const string Version = "1.6.6";
         public const string DownloadLink = "https://github.com/SillyAlexX/FsOptimizer";
     }
 
@@ -150,6 +153,7 @@ namespace FsOptimizer
     {
         public static Page MainPage;
         public static MelonPreferences_Category Preferences;
+        public static HarmonyLib.Harmony HarmonyInstance;
 
         // Auto-Clean System
         internal static MelonPreferences_Entry<bool> autoCleanEnabled;
@@ -181,8 +185,50 @@ namespace FsOptimizer
             adaptiveAutoCleanEnabled = Preferences.CreateEntry("AdaptiveAutoClean", false, "Adaptive Auto Clean Enabled");
 
             Hooking.OnLevelLoaded += OnLevelLoaded;
+
+            ConfigManager.LoadConfig();
+            ConfigManager.ApplyConfigToPreferences();
+
             ((MelonBase)this).LoggerInstance.Msg("FsOptimizer Online");
+
             SetupMenu();
+        }
+
+        [HarmonyPatch(typeof(ConnectionRequestMessage))]
+        public static class ConnectionRequestMessagePatch
+        {
+            [HarmonyPatch("OnHandleMessage")]
+            [HarmonyPrefix]
+            public static bool OnHandleMessage_Prefix(object __instance, ReceivedMessage received)
+            {
+                try
+                {
+                    if (NetworkInfo.IsHost)
+                    {
+                        var data = received.ReadData<ConnectionRequestData>();
+                        MelonLogger.Msg($"[AntiGrief] Incoming connection: PlatformID={data.PlatformID}, Version={data.Version}");
+                    }
+                    if (NetworkInfo.Layer.RequiresValidId)
+                    {
+                        var data = received.ReadData<ConnectionRequestData>();
+                        if (NetworkInfo.IsSpoofed(data.PlatformID))
+                        {
+                            var id = NetworkInfo.LastReceivedUser.Value;
+                            MelonLogger.Warning($"[AntiGrief] Spoofed ID detected! Blocking connection: {id}");
+                            ShowNotification($"[AntiGrief] Spoofed ID detected! Blocking connection: {id}", NotificationType.Warning);
+                            ConnectionSender.SendConnectionDeny(id, "[AntiGrief]");
+                            return false;
+                        }
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    MelonLogger.Warning($"[AntiGrief] Error processing connection attempt: {ex}");
+                }
+
+                return true;
+            }
         }
 
         private void OnLevelLoaded(LevelInfo info)
@@ -197,6 +243,9 @@ namespace FsOptimizer
             };
             Notifier.Send(notification);
             ConfigManager.LoadConfig();
+            ConfigManager.ApplyConfigToPreferences();
+            lastCleanTime = Time.time;
+            lastAdaptiveCheck = Time.time;
         }
 
         public override void OnUpdate()
@@ -480,7 +529,7 @@ namespace FsOptimizer
             return $"{bytes / (1024 * 1024)} MB";
         }
 
-        private void ShowNotification(string message, NotificationType type)
+        private static void ShowNotification(string message, NotificationType type)
         {
             try
             {
