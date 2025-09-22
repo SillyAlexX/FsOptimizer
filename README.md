@@ -57,12 +57,12 @@ If a code mod (a mod installed from Thunderstore) stops working, make sure you r
 
 FsO has only been tested on PCVR, so if you're using this on Quest (or any other platform for that matter), YMMV. If you do face any issues, though, make sure you let me know!
 
-If you have any other issues, feedback, or criticisms, feel free to contact me on my Discord server: <https://discord.gg/aQhhXRDqn9> or report it to the Github page <https://github.com/PopperVids/FsOptimizer>
+If you have any other issues, feedback, or criticisms, feel free to contact me on my Discord server: <https://discord.gg/4xJUfV3T84> or report it to the Github page <https://github.com/SillyAlexX/FsOptimizer>
 
 ## Credits
 
 - Popper - Creator & Lead Dev  
-  [YouTube](https://www.youtube.com/@PopperVids) | [GitHub](https://github.com/PopperVids) | [Discord](https://discord.com/users/775549612135940136)
+  [YouTube](https://www.youtube.com/@PopperVids) | [GitHub](https://github.com/SillyAlexX) | [Discord](https://discord.com/users/775549612135940136)
 - Kine - Creator of Documentation & Mod Icon  
   [YouTube](https://www.youtube.com/@FineMineKine) | [GitHub](https://github.com/FineMineKine) | [Discord](https://discord.com/users/666869061623349250)
 
