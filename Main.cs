@@ -257,8 +257,6 @@ namespace FsOptimizer
 
             ConfigManager.LoadConfig();
             ConfigManager.ApplyConfigToPreferences();
-            lastCleanTime = Time.time;
-            lastAdaptiveCheck = Time.time;
         }
 
         // -----------------------------
@@ -297,7 +295,7 @@ namespace FsOptimizer
                 if (!HasFusionPermission(requester))
                 {
                     MelonLogger.Warning($"{requester?.Username} tried to clean without permission!");
-                    ShowNotification("No permission to clean!", NotificationType.Error);
+                    ShowNotification("Nuh Uh", NotificationType.Error);
                     return;
                 }
 
@@ -393,32 +391,10 @@ namespace FsOptimizer
 
                 PooleeUtilities.RequestSpawn("Sileqoenn.DeltaruneFountainMaker.Spawnable.SealallDarkFountains", transform, 0, true);
                 PooleeUtilities.RequestSpawn("FragileDeviations.PlantLab.Spawnable.SelfDestructionPartTwo", transform, 0, true);
-                DespawnSpecificObject("BlueScream.Patriotism.Spawnable.AmericanFlag");
             }
             catch (Exception e)
             {
                 MelonLogger.Warning($"Failed to clean problematic spawns: {e.Message}");
-            }
-        }
-
-        private void DespawnSpecificObject(string barcode)
-        {
-            try
-            {
-                var warehouse = AssetWarehouse.Instance;
-                if (warehouse.TryGetCrate(new Barcode(barcode), out var crate))
-                {
-                    ushort spawnableId = (ushort)crate.Barcode.ShortCode;
-                    PooleeUtilities.RequestDespawn(spawnableId, true);
-                }
-                else
-                {
-                    MelonLogger.Warning($"Could not find spawnable: {barcode}");
-                }
-            }
-            catch (Exception e)
-            {
-                MelonLogger.Error($"Failed to despawn {barcode}: {e.Message}");
             }
         }
 
@@ -538,6 +514,12 @@ namespace FsOptimizer
                 string status = value ? "enabled" : "disabled";
                 ShowNotification($"Anti-Grief Protection {status}", NotificationType.Information);
                 MelonLogger.Msg($"Anti-Grief Protection {status}");
+
+                if (value == true)
+                {
+                    MelonLogger.Warning("Admin clean may not work with Anti-Grief enabled");
+                    ShowNotification("Admin clean may not work with Anti-Grief enabled", NotificationType.Warning);
+                }
             });
 
             MainPage.CreateEnum("Clean Interval", Color.cyan, GetIntervalEnum(), (intervalEnum) =>
@@ -558,19 +540,12 @@ namespace FsOptimizer
 
             MainPage.CreateFunction("Show Current Status", Color.white, () =>
             {
-                if (NetworkInfo.HasServer && NetworkInfo.IsHost)
-                {
                     string autoStatus = autoCleanEnabled.Value ? "enabled" : "disabled";
                     string adaptiveStatus = adaptiveAutoCleanEnabled.Value ? "enabled" : "disabled";
                     string AntiGriefStatus = AntiGriefEnabled.Value ? "enabled" : "disabled";
                     int playerCount = PlayerIDManager.PlayerIDs.Count;
 
                     ShowNotification($"Auto: {autoStatus} | Adaptive: {adaptiveStatus} | Interval: {autoCleanInterval.Value / 60:F0}min | Anti-Grief: {AntiGriefStatus} | Players: {playerCount}", NotificationType.Information);
-                }
-                else
-                {
-                    ShowNotification("Not connected as server host", NotificationType.Warning);
-                }
             });
 
             MainPage.CreateFunction("Save Config", Color.white, () =>
@@ -618,6 +593,44 @@ namespace FsOptimizer
             }
 
             return true;
+        }
+
+        [HarmonyPatch(typeof(ConnectionRequestMessage))]
+        public static class ConnectionRequestMessagePatch
+        {
+            [HarmonyPatch("OnHandleMessage")]
+            [HarmonyPrefix]
+            public static bool OnHandleMessage_Prefix(object __instance, ReceivedMessage received)
+            {
+                // If anti-grief is DISABLED or null, skip logic
+                if (AntiGriefEnabled?.Value != true) return true;
+
+                try
+                {
+                    if (NetworkInfo.IsHost)
+                    {
+                        var data = received.ReadData<ConnectionRequestData>();
+                        MelonLogger.Msg($"[AntiGrief] Incoming connection: PlatformID={data.PlatformID}, Version={data.Version}");
+                    }
+                    if (NetworkInfo.Layer.RequiresValidId)
+                    {
+                        var data = received.ReadData<ConnectionRequestData>();
+                        if (NetworkInfo.IsSpoofed(data.PlatformID))
+                        {
+                            var id = NetworkInfo.LastReceivedUser.Value;
+                            MelonLogger.Warning($"[AntiGrief] Spoofed ID detected! Blocking connection: {id}");
+                            ShowNotification($"[AntiGrief] Spoofed ID detected! Blocking connection: {id}", NotificationType.Warning);
+                            ConnectionSender.SendConnectionDeny(id, "[AntiGrief]");
+                            return false;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MelonLogger.Warning($"[AntiGrief] Error processing connection attempt: {ex}");
+                }
+                return true;
+            }
         }
 
         public override void OnApplicationQuit()
