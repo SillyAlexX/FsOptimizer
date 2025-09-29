@@ -1,6 +1,6 @@
 # FsOptimizer
 
-FusionOptimizer (FsO) is a mod that aims to make a Fusion server hoster's day *slightly* better, with features such as auto-clean, quick level reload, memory clean, and more!
+FusionOptimizer (FsO) is a mod that aims to make a Fusion server hoster's day *slightly* better, with features such as auto-clean, quick level reload, and more!
 
 ## Features
 
@@ -21,6 +21,13 @@ The Auto Cleaner will run the Server Cleaner after a certain amount of time has 
 ### Adaptive Auto Clean
 
 Adaptive Auto Clean will automatically set the Auto Clean time based on the number of players active on the server, 30 minutes for 1-2 players, 25 minutes for 3-4 players, 15 minutes for exactly 5 players, 10 minutes for 8+ players AAC requires Auto Cleaner to be enabled if you attempt to enable it you will be prompted to enable auto clean (Turn them both off then on).
+
+### Admin clean
+Admin clean is a feature that I have wanted for a while. Normally in fusion lobbies only the host can clean the server but with admin clean as long as you have operator in the server, you can clean the server as well
+
+### Anti-Grief
+Anti-Grief, as the name implies is meant to stop client users from crashing your game. Thank you to DuckFace for writing and implementing the code. As for why admin clean might not work with this enabled is due to how admin clean works, in a nutshell it spoofs the host to be able to clean
+
 
 ### Show Current Status
 
@@ -55,14 +62,14 @@ These instructions are for Steam installations, but Meta PC App installations sh
 
 If a code mod (a mod installed from Thunderstore) stops working, make sure you report it in my Discord server, then try using the Level Reloader or restart the game to try and fix it.
 
-FsO has only been tested on PCVR, so if you're using this on Quest (or any other platform for that matter), YMMV. If you do face any issues, though, make sure you let me know!
+FsO will only work on pc it is not intended for Quest users. If you're a Quest user how is your headset not dying playing Fusion lol
 
 If you have any other issues, feedback, or criticisms, feel free to contact me on my Discord server: <https://discord.gg/4xJUfV3T84> or report it to the Github page <https://github.com/SillyAlexX/FsOptimizer>
 
 ## Credits
 
 - Popper - Creator & Lead Dev  
-  [YouTube](https://www.youtube.com/@PopperVids) | [GitHub](https://github.com/SillyAlexX) | [Discord](https://discord.com/users/775549612135940136)
+  [YouTube](https://www.youtube.com/@PopperVids) | [GitHub](https://github.com/PopperVids) | [Discord](https://discord.com/users/775549612135940136)
 - Kine - Creator of Documentation & Mod Icon  
   [YouTube](https://www.youtube.com/@FineMineKine) | [GitHub](https://github.com/FineMineKine) | [Discord](https://discord.com/users/666869061623349250)
 
