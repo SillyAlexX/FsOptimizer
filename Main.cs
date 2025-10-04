@@ -607,26 +607,17 @@ namespace FsOptimizer
 
                 try
                 {
-                    var id = NetworkInfo.LastReceivedUser.Value;
                     if (NetworkInfo.IsHost)
                     {
                         var data = received.ReadData<ConnectionRequestData>();
-                        MelonLogger.Msg($"[AntiGrief] Incoming connection: PlatformID={id}, Version={data.Version}");
-                        if (data.PlatformID != id)
-                        {
-
-                            MelonLogger.Warning($"[AntiGrief] Spoofed ID detected! Blocking connection: {id} ");
-                            ShowNotification($"[AntiGrief] Spoofed ID detected! Blocking connection: {id}", NotificationType.Warning);
-                            ConnectionSender.SendConnectionDeny(id, "[AntiGrief]");
-                            return false;
-                        }
+                        MelonLogger.Msg($"[AntiGrief] Incoming connection: PlatformID={data.PlatformID}, Version={data.Version}");
                     }
                     if (NetworkInfo.Layer.RequiresValidId)
                     {
                         var data = received.ReadData<ConnectionRequestData>();
                         if (NetworkInfo.IsSpoofed(data.PlatformID))
                         {
-                            
+                            var id = NetworkInfo.LastReceivedUser.Value;
                             MelonLogger.Warning($"[AntiGrief] Spoofed ID detected! Blocking connection: {id}");
                             ShowNotification($"[AntiGrief] Spoofed ID detected! Blocking connection: {id}", NotificationType.Warning);
                             ConnectionSender.SendConnectionDeny(id, "[AntiGrief]");
