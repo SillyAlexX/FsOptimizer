@@ -599,13 +599,13 @@ namespace FsOptimizer
         public static class RateLimiter
         {
             // How many actions are allowed per player per second
-            private const int MAX_ACTIONS_PER_SECOND = 6;
+            private const int MAX_ACTIONS_PER_SECOND = 8;
 
             // How long a time window lasts before resetting (in seconds)
             private const float RATE_WINDOW = 1.0f;
 
             // How long players are blocked after exceeding the limit
-            private const float COOLDOWN_DURATION = 3.0f;
+            private const float COOLDOWN_DURATION = 5.0f;
 
             // Tracks player activity
             private static readonly Dictionary<ulong, PlayerRateData> _playerRates = new Dictionary<ulong, PlayerRateData>();
@@ -640,7 +640,7 @@ namespace FsOptimizer
                 // If player is on cooldown, deny instantly
                 if (rate.IsOnCooldown)
                 {
-                    MelonLogger.Warning($"[AntiGrief] Player {playerId} still on cooldown for '{actionName}'");
+                    MelonLogger.Warning($"[FSOAntiGrief] Player {playerId} still on cooldown for '{actionName}'");
                     return false;
                 }
 
@@ -653,7 +653,7 @@ namespace FsOptimizer
                     rate.CooldownEndTime = Time.time + COOLDOWN_DURATION;
                     rate.Count = 0; // reset their counter
 
-                    MelonLogger.Warning($"[AntiGrief] Player {playerId} exceeded limit for '{actionName}'. Blocked for {COOLDOWN_DURATION}s.");
+                    MelonLogger.Warning($"[FSOAntiGrief] Player {playerId} exceeded limit for '{actionName}'. Blocked for {COOLDOWN_DURATION}s.");
                     return false;
                 }
 
@@ -686,13 +686,13 @@ namespace FsOptimizer
                     if (NetworkInfo.IsHost)
                     {
                         var data = received.ReadData<ConnectionRequestData>();
-                        MelonLogger.Msg($"[AntiGrief] Incoming connection: PlatformID={id}, Version={data.Version}");
+                        MelonLogger.Msg($"[FSOAntiGrief] Incoming connection: PlatformID={id}, Version={data.Version}");
                         if (data.PlatformID != id)
                         {
 
-                            MelonLogger.Warning($"[AntiGrief] Spoofed ID detected! Blocking connection: {id} ");
-                            ShowNotification($"[AntiGrief] Spoofed ID detected! Blocking connection: {id}", NotificationType.Warning);
-                            ConnectionSender.SendConnectionDeny(id, "[AntiGrief]");
+                            MelonLogger.Warning($"[FSOAntiGrief] Spoofed ID detected! Blocking connection: {id} ");
+                            ShowNotification($"[FSOAntiGrief] Spoofed ID detected! Blocking connection: {id}", NotificationType.Warning);
+                            ConnectionSender.SendConnectionDeny(id, "[FSOAntiGrief]");
                             return false;
                         }
                     }
@@ -702,73 +702,56 @@ namespace FsOptimizer
                         if (NetworkInfo.IsSpoofed(data.PlatformID))
                         {
                             
-                            MelonLogger.Warning($"[AntiGrief] Spoofed ID detected! Blocking connection: {id}");
-                            ShowNotification($"[AntiGrief] Spoofed ID detected! Blocking connection: {id}", NotificationType.Warning);
-                            ConnectionSender.SendConnectionDeny(id, "[AntiGrief]");
+                            MelonLogger.Warning($"[FSOAntiGrief] Spoofed ID detected! Blocking connection: {id}");
+                            ShowNotification($"[FSOAntiGrief] Spoofed ID detected! Blocking connection: {id}", NotificationType.Warning);
+                            ConnectionSender.SendConnectionDeny(id, "[FSOAntiGrief]");
                             return false;
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    MelonLogger.Warning($"[AntiGrief] Error processing connection attempt: {ex}");
+                    MelonLogger.Warning($"[FSOAntiGrief] Error processing connection attempt: {ex}");
                 }
                 return true;
             }
         }
 
-        [HarmonyPatch(typeof(MessageRelay))]
-        public static class MessageRelayPatch
+        [HarmonyPatch(typeof(SpawnRequestMessage))]
+        public static class SpawnRequestPatch
         {
+            [HarmonyPatch("OnHandleMessage")]
             [HarmonyPrefix]
-            [HarmonyPatch("RelayNative")]
-            public static bool Prefix_RelayNative(object data, byte tag)
+            public static bool OnHandleMessage_Prefix(ReceivedMessage received)
             {
+                // If anti-grief is DISABLED or null, skip logic
                 if (AntiGriefEnabled?.Value != true) return true;
 
                 try
                 {
-                    // Identify sender
+                    // Who sent this packet
                     ulong sender = (ulong)NetworkInfo.LastReceivedUser;
 
-                    // Ignore if host (don't self-block)
+                    // Skip if host (don’t block yourself)
                     if (NetworkInfo.IsHost)
-                        return true;
-
-                    // Monitor dangerous tags
-                    if (tag == NativeMessageTag.SpawnRequest ||
-                        tag == NativeMessageTag.DespawnRequest ||
-                        tag == NativeMessageTag.DespawnResponse)
                     {
-                        if (!RateLimiter.AllowAction(sender, $"Tag {tag}"))
-                        {
-                            MelonLogger.Warning($"[AntiGrief] Rate limit triggered for {sender} on tag {tag}");
-                            return false;
-                        }
+                        return true;
                     }
 
-                    if (tag == NativeMessageTag.PlayerRepAvatar ||
-                        (tag >= NativeMessageTag.RPCEvent && tag <= NativeMessageTag.RPCMethod))
+                    // Rate limit check
+                    if (!RateLimiter.AllowAction(sender, "SpawnRequest"))
                     {
-                        if (!RateLimiter.AllowAction(sender, $"Tag {tag}"))
-                        {
-                            MelonLogger.Warning($"[AntiGrief] RPC/Avatar spam from {sender} blocked (tag {tag})");
-                            return false;
-                        }
+                        MelonLogger.Warning($"[FSOAntiGrief] Blocked spawn from {sender} (rate limit/cooldown)");
+                        return false; // cancel handling = block spawn
                     }
                 }
                 catch (System.Exception ex)
                 {
-                    MelonLogger.Error($"[AntiGrief] RelayNative patch error: {ex}");
+                    MelonLogger.Error($"[FSOAntiGrief] Spawn limiter error: {ex}");
                 }
 
-                return true; // allow normal behavior
+                return true; // allow spawn
             }
-        }
-
-        public override void OnApplicationQuit()
-        {
-            ConfigManager.SaveConfig();
         }
 
         private string FormatBytes(long bytes)
