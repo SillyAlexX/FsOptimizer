@@ -161,7 +161,7 @@ namespace FsOptimizer
         public const string Description = "A Fusion server cleaner/optimizer";
         public const string Author = "SillyAlex";
         public const string Company = null;
-        public const string Version = "1.6.6";
+        public const string Version = "1.6.7";
         public const string DownloadLink = "https://github.com/SillyAlexX/FsOptimizer";
     }
 
@@ -257,6 +257,7 @@ namespace FsOptimizer
 
             ConfigManager.LoadConfig();
             ConfigManager.ApplyConfigToPreferences();
+            RateLimiter.Reset();
         }
 
         // -----------------------------
@@ -595,6 +596,60 @@ namespace FsOptimizer
             return true;
         }
 
+        public static class RateLimiter
+        {
+            // How many actions are allowed per player per second
+            private const int MAX_ACTIONS_PER_SECOND = 6;
+
+            // How long a time window lasts before resetting (in seconds)
+            private const float RATE_WINDOW = 1.0f;
+
+            // Tracks player activity
+            private static readonly Dictionary<ulong, PlayerRateData> _playerRates = new Dictionary<ulong, PlayerRateData>();
+
+            // Used to clear old data once per second
+            private static float _lastResetTime;
+
+            private class PlayerRateData
+            {
+                public int Count;
+                public float LastActionTime;
+            }
+            public static bool AllowAction(ulong playerId, string actionName)
+            {
+                // Reset all rate data periodically
+                if (Time.time - _lastResetTime > RATE_WINDOW)
+                {
+                    _playerRates.Clear();
+                    _lastResetTime = Time.time;
+                }
+
+                // Get or create rate data for this player
+                if (!_playerRates.TryGetValue(playerId, out var rate))
+                {
+                    rate = new PlayerRateData();
+                    _playerRates[playerId] = rate;
+                }
+
+                rate.Count++;
+                rate.LastActionTime = Time.time;
+
+                // If exceeded allowed actions per window, deny
+                if (rate.Count > MAX_ACTIONS_PER_SECOND)
+                {
+                    MelonLogger.Warning($"[AntiGrief] Player {playerId} exceeded limit for '{actionName}' ({rate.Count}/{MAX_ACTIONS_PER_SECOND})");
+                    return false;
+                }
+
+                return true;
+            }
+            public static void Reset()
+            {
+                _playerRates.Clear();
+                _lastResetTime = Time.time;
+            }
+        }
+
         [HarmonyPatch(typeof(ConnectionRequestMessage))]
         public static class ConnectionRequestMessagePatch
         {
@@ -639,6 +694,55 @@ namespace FsOptimizer
                     MelonLogger.Warning($"[AntiGrief] Error processing connection attempt: {ex}");
                 }
                 return true;
+            }
+        }
+
+        [HarmonyPatch(typeof(MessageRelay))]
+        public static class MessageRelayPatch
+        {
+            [HarmonyPrefix]
+            [HarmonyPatch("RelayNative")]
+            public static bool Prefix_RelayNative(object data, byte tag)
+            {
+                if (AntiGriefEnabled?.Value != true) return true;
+
+                try
+                {
+                    // Identify sender
+                    ulong sender = (ulong)NetworkInfo.LastReceivedUser;
+
+                    // Ignore if host (don't self-block)
+                    if (NetworkInfo.IsHost)
+                        return true;
+
+                    // Monitor dangerous tags
+                    if (tag == NativeMessageTag.SpawnRequest ||
+                        tag == NativeMessageTag.DespawnRequest ||
+                        tag == NativeMessageTag.DespawnResponse)
+                    {
+                        if (!RateLimiter.AllowAction(sender, $"Tag {tag}"))
+                        {
+                            MelonLogger.Warning($"[AntiGrief] Rate limit triggered for {sender} on tag {tag}");
+                            return false;
+                        }
+                    }
+
+                    if (tag == NativeMessageTag.PlayerRepAvatar ||
+                        (tag >= NativeMessageTag.RPCEvent && tag <= NativeMessageTag.RPCMethod))
+                    {
+                        if (!RateLimiter.AllowAction(sender, $"Tag {tag}"))
+                        {
+                            MelonLogger.Warning($"[AntiGrief] RPC/Avatar spam from {sender} blocked (tag {tag})");
+                            return false;
+                        }
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    MelonLogger.Error($"[AntiGrief] RelayNative patch error: {ex}");
+                }
+
+                return true; // allow normal behavior
             }
         }
 
