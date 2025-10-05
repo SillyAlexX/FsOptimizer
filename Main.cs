@@ -604,6 +604,9 @@ namespace FsOptimizer
             // How long a time window lasts before resetting (in seconds)
             private const float RATE_WINDOW = 1.0f;
 
+            // How long players are blocked after exceeding the limit
+            private const float COOLDOWN_DURATION = 3.0f;
+
             // Tracks player activity
             private static readonly Dictionary<ulong, PlayerRateData> _playerRates = new Dictionary<ulong, PlayerRateData>();
 
@@ -614,7 +617,10 @@ namespace FsOptimizer
             {
                 public int Count;
                 public float LastActionTime;
+                public float CooldownEndTime;
+                public bool IsOnCooldown => Time.time < CooldownEndTime;
             }
+
             public static bool AllowAction(ulong playerId, string actionName)
             {
                 // Reset all rate data periodically
@@ -631,18 +637,32 @@ namespace FsOptimizer
                     _playerRates[playerId] = rate;
                 }
 
+                // If player is on cooldown, deny instantly
+                if (rate.IsOnCooldown)
+                {
+                    MelonLogger.Warning($"[AntiGrief] Player {playerId} still on cooldown for '{actionName}'");
+                    return false;
+                }
+
                 rate.Count++;
                 rate.LastActionTime = Time.time;
 
-                // If exceeded allowed actions per window, deny
+                // If exceeded allowed actions per window, apply cooldown
                 if (rate.Count > MAX_ACTIONS_PER_SECOND)
                 {
-                    MelonLogger.Warning($"[AntiGrief] Player {playerId} exceeded limit for '{actionName}' ({rate.Count}/{MAX_ACTIONS_PER_SECOND})");
+                    rate.CooldownEndTime = Time.time + COOLDOWN_DURATION;
+                    rate.Count = 0; // reset their counter
+
+                    MelonLogger.Warning($"[AntiGrief] Player {playerId} exceeded limit for '{actionName}'. Blocked for {COOLDOWN_DURATION}s.");
                     return false;
                 }
 
                 return true;
             }
+
+            /// <summary>
+            /// Manually clear all tracking data (e.g., when a new match starts)
+            /// </summary>
             public static void Reset()
             {
                 _playerRates.Clear();
