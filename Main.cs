@@ -721,35 +721,34 @@ namespace FsOptimizer
             [HarmonyPrefix]
             public static bool OnHandleMessage_Prefix(ReceivedMessage received)
             {
-                // If anti-grief is DISABLED or null, skip logic
-                if (AntiGriefEnabled?.Value != true) return true;
-
                 try
                 {
-                    // Who sent this packet
+                    // Only do this if you are the host
+                    if (!NetworkInfo.IsHost)
+                        return true;
+
                     ulong sender = (ulong)NetworkInfo.LastReceivedUser;
 
-                    // Skip if host (don’t block yourself)
-                    if (NetworkInfo.IsHost)
-                    {
+                    // Ignore null/zero IDs
+                    if (sender == 0)
                         return true;
-                    }
 
-                    // Rate limit check
+                    // Apply rate limit to that client
                     if (!RateLimiter.AllowAction(sender, "SpawnRequest"))
                     {
-                        MelonLogger.Warning($"[FSOAntiGrief] Blocked spawn from {sender} (rate limit/cooldown)");
-                        return false; // cancel handling = block spawn
+                        MelonLogger.Warning($"[AntiGrief] Blocked spawn from client {sender} (rate limit/cooldown)");
+                        return false;
                     }
                 }
                 catch (System.Exception ex)
                 {
-                    MelonLogger.Error($"[FSOAntiGrief] Spawn limiter error: {ex}");
+                    MelonLogger.Error($"[AntiGrief] Spawn limiter error: {ex}");
                 }
 
-                return true; // allow spawn
+                return true;
             }
         }
+
 
         private string FormatBytes(long bytes)
         {
