@@ -23,15 +23,15 @@ using LabFusion.Player;
 using LabFusion.Representation;
 using LabFusion.Senders;
 using LabFusion.Utilities;
-using MelonLoader;
-using MelonLoader.Utils;
-using Newtonsoft.Json;
 using Steamworks;
 // System
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using MelonLoader;
+using MelonLoader.Utils;
+using Newtonsoft.Json;
 // Unity
 using UnityEngine;
 using static FsOptimizer.ConfigManager.FsOptimizer;
