@@ -599,7 +599,7 @@ namespace FsOptimizer
         public static class RateLimiter
         {
             // How many actions are allowed per player per second
-            private const int MAX_ACTIONS_PER_SECOND = 8;
+            private const int MAX_ACTIONS_PER_SECOND = 6;
 
             // How long a time window lasts before resetting (in seconds)
             private const float RATE_WINDOW = 1.0f;
@@ -715,7 +715,7 @@ namespace FsOptimizer
         }
 
         [HarmonyPatch(typeof(SpawnRequestMessage))]
-        public static class SpawnRequestPatch
+        public static class SpawnRequestMessagePatch
         {
             [HarmonyPatch("OnHandleMessage")]
             [HarmonyPrefix]
@@ -723,32 +723,47 @@ namespace FsOptimizer
             {
                 try
                 {
-                    // Only do this if you are the host
+                    // Only the host should filter incoming spawn requests
                     if (!NetworkInfo.IsHost)
                         return true;
 
+                    // True sender of this packet
                     ulong sender = (ulong)NetworkInfo.LastReceivedUser;
 
-                    // Ignore null/zero IDs
-                    if (sender == 0)
-                        return true;
+                    // Make sure this sender exists in the player list
+                    var player = NetworkPlayer.Players.FirstOrDefault(p => p.PlayerID.PlatformID == sender);
+                    string username = player?.Username ?? sender.ToString();
 
-                    // Apply rate limit to that client
+                    if (player == null)
+                    {
+                        MelonLogger.Warning($"[AntiGrief] Spawn request from unknown sender {sender}");
+                        return false;
+                    }
+
+                    // Detect spoofing (pretending to be host)
+                    var host = NetworkPlayer.Players.FirstOrDefault(p => p.PlayerID.IsHost);
+                    if (host != null && player.PlayerID.IsHost && sender != host.PlayerID.PlatformID)
+                    {
+                        MelonLogger.Warning($"[AntiGrief] Spoofed host ID detected from {username} ({sender})");
+                        return false;
+                    }
+
+                    // Apply spawn rate limiting
                     if (!RateLimiter.AllowAction(sender, "SpawnRequest"))
                     {
-                        MelonLogger.Warning($"[AntiGrief] Blocked spawn from client {sender} (rate limit/cooldown)");
+                        MelonLogger.Warning($"[AntiGrief] Blocked spawn from {username} ({sender}) – rate limit exceeded.");
+                        CleanServerStyle();
                         return false;
                     }
                 }
-                catch (System.Exception ex)
+                catch (Exception ex)
                 {
-                    MelonLogger.Error($"[AntiGrief] Spawn limiter error: {ex}");
+                    MelonLogger.Error($"[AntiGrief] SpawnRequestMessage limiter failed: {ex}");
                 }
 
-                return true;
+                return true; // let Fusion handle normal spawns
             }
         }
-
 
         private string FormatBytes(long bytes)
         {
