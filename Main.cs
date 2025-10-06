@@ -660,9 +660,6 @@ namespace FsOptimizer
                 return true;
             }
 
-            /// <summary>
-            /// Manually clear all tracking data (e.g., when a new match starts)
-            /// </summary>
             public static void Reset()
             {
                 _playerRates.Clear();
