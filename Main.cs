@@ -14,7 +14,7 @@ using Il2CppSLZ.Marrow;
 using Il2CppSLZ.Marrow.Pool;
 using Il2CppSLZ.Marrow.SceneStreaming;
 using Il2CppSLZ.Marrow.Warehouse;
-// LabFusion
+// Fusion
 using LabFusion.Data;
 using LabFusion.Downloading.ModIO;
 using LabFusion.Entities;
