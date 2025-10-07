@@ -749,6 +749,7 @@ namespace FsOptimizer
             [HarmonyPrefix]
             public static bool OnHandleMessage_Prefix(ReceivedMessage received)
             {
+                if (AntiGriefEnabled?.Value != true) return true;
                 try
                 {
                     // Only the host should filter incoming spawn requests
